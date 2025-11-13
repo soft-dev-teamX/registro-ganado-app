@@ -34,6 +34,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
     }
     buildFeatures {
         compose = true
@@ -53,6 +54,8 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
 
     implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("androidx.compose.material:material-icons-extended")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -15,6 +15,7 @@ import com.softaprendizaje.ganado.ui.theme.RegistroGanadoTheme
 import com.softaprendizaje.ganado.ui.screens.WelcomeScreen
 import com.softaprendizaje.ganado.ui.screens.RegisterScreen
 import com.softaprendizaje.ganado.ui.screens.LoginScreen
+import com.softaprendizaje.ganado.ui.screens.HomeScreen
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,6 +43,7 @@ fun AppNavigation() {
         }
         composable("register") { RegisterScreen(navController) }
         composable("login") { LoginScreen(navController) }
+        composable("home") { HomeScreen(navController) }
     }
 }
 
