@@ -1,33 +1,34 @@
 package com.softaprendizaje.ganado.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday // Para el ícono de fecha
-import androidx.compose.material.icons.filled.ArrowDropDown // Para el Dropdown
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.softaprendizaje.ganado.ui.data.Animal
 import com.softaprendizaje.ganado.ui.viewmodels.GanadoViewModel
+import com.softaprendizaje.ganado.ui.theme.main_blue // ⬅️ Importamos main_blue
 import java.util.UUID
-
 import android.app.DatePickerDialog
-import androidx.compose.ui.platform.LocalContext
 import java.util.Calendar
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAnimalScreen(
-    onAnimalCreated: () -> Unit // Cambié el nombre del parámetro a algo más claro
+    onAnimalCreated: () -> Unit
 ) {
     // 1. ESTADOS DE LOS CAMPOS
     val viewModel: GanadoViewModel = viewModel()
@@ -38,10 +39,9 @@ fun CreateAnimalScreen(
     var raza by remember { mutableStateOf("") }
 
     // Campos de Información básica
-    var fechaNacimiento by remember { mutableStateOf("") } // Usaremos un diálogo de fecha para esto
+    var fechaNacimiento by remember { mutableStateOf("") }
     var numeroLote by remember { mutableStateOf("") }
-    var propositoAnimal by remember { mutableStateOf("Doble propósito") } // Valor inicial
-    var isDropdownExpanded by remember { mutableStateOf(false) } // Para el Dropdown
+    var propositoAnimal by remember { mutableStateOf("Doble propósito") }
     val propositoOptions = listOf("Doble propósito", "Carne", "Leche", "Cría")
     var esMacho by remember { mutableStateOf(true) }
 
@@ -55,12 +55,14 @@ fun CreateAnimalScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Animal") },
+                title = { Text("Crear Animal", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onAnimalCreated) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
-                }
+                },
+                // 1. Aplicamos main_blue a la TopBar
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = main_blue)
             )
         }
     ) { padding ->
@@ -68,13 +70,13 @@ fun CreateAnimalScreen(
             modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = 16.dp)
-                .verticalScroll(scrollState), // Habilitamos el scroll
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // --- 🐮 SECCIÓN DE IDENTIFICACIÓN ---
-            FormSectionHeader(title = "Identificación")
+            FormSectionHeader(title = "Identificación") // Usará main_blue
 
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -94,10 +96,11 @@ fun CreateAnimalScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // --- 🗓️ SECCIÓN INFORMACIÓN BÁSICA ---
-            FormSectionHeader(title = "Información básica")
+            FormSectionHeader(title = "Información básica") // Usará main_blue
 
             Spacer(modifier = Modifier.height(8.dp))
-            // Campo de Fecha de nacimiento (simulado como TextField clickable)
+
+            // Campo de Fecha de nacimiento (con DatePickerDialog)
             OutlinedTextField(
                 value = fechaNacimiento,
                 onValueChange = { },
@@ -107,16 +110,20 @@ fun CreateAnimalScreen(
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = "Seleccionar fecha",
+                        // 2. Aplicamos main_blue al ícono de calendario
+                        tint = main_blue,
                         modifier = Modifier.clickable {
                             val datePicker = DatePickerDialog(
                                 context,
                                 { _, year, month, dayOfMonth ->
-                                    fechaNacimiento = "$dayOfMonth/${month + 1}/$year"
+                                    // Formato de fecha dd/mm/yyyy
+                                    fechaNacimiento = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
                                 },
                                 calendar.get(Calendar.YEAR),
                                 calendar.get(Calendar.MONTH),
                                 calendar.get(Calendar.DAY_OF_MONTH)
                             )
+                            // 3. Puedes estilizar el DatePicker si usas un tema custom, aquí solo mostramos
                             datePicker.show()
                         }
                     )
@@ -124,6 +131,7 @@ fun CreateAnimalScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = numeroLote,
                 onValueChange = { numeroLote = it },
@@ -141,23 +149,31 @@ fun CreateAnimalScreen(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Sexo del animal *", style = MaterialTheme.typography.titleMedium)
+            // 4. Mejoramos el estilo del texto de la etiqueta Sexo
+            Text(
+                "Sexo del animal *",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = esMacho,
-                        onClick = { esMacho = true }
+                        onClick = { esMacho = true },
+                        colors = RadioButtonDefaults.colors(selectedColor = main_blue) // 5. Aplicamos main_blue al RadioButton
                     )
                     Text("Macho")
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = !esMacho,
-                        onClick = { esMacho = false }
+                        onClick = { esMacho = false },
+                        colors = RadioButtonDefaults.colors(selectedColor = main_blue) // 5. Aplicamos main_blue al RadioButton
                     )
                     Text("Hembra")
                 }
@@ -167,18 +183,19 @@ fun CreateAnimalScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // --- 📝 SECCIÓN OTROS ---
-            FormSectionHeader(title = "Otros")
+            FormSectionHeader(title = "Otros") // Usará main_blue
 
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = observaciones,
                 onValueChange = { observaciones = it },
                 label = { Text("Condición de salud y observaciones") },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                singleLine = false // Para que sea un campo de texto multi-línea
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 100.dp, max = 200.dp), // Usamos heightIn para mejor control visual
+                singleLine = false
             )
 
-            // Espacio para empujar el botón al fondo si hay mucho espacio, si no, es solo un separador.
             Spacer(modifier = Modifier.height(24.dp))
 
             // --- ✅ BOTÓN CREAR ---
@@ -196,15 +213,20 @@ fun CreateAnimalScreen(
                         fechaNacimiento = fechaNacimiento,
                         proposito = propositoAnimal,
                         esMacho = esMacho,
-                        )
+                    )
                     viewModel.agregarAnimal(nuevoAnimal)
 
-                    onAnimalCreated() // Regresa a la pantalla anterior.
+                    onAnimalCreated()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE94444)),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                // 6. Usamos el rojo distintivo y forma redondeada (como en la maqueta de la finca)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(bottom = 16.dp)
             ) {
-                Text("Crear", modifier = Modifier.padding(vertical = 8.dp))
+                Text("Crear Animal", modifier = Modifier.padding(vertical = 4.dp))
             }
         }
     }
@@ -214,19 +236,25 @@ fun CreateAnimalScreen(
 @Composable
 fun FormSectionHeader(title: String) {
     Surface(
-        color = MaterialTheme.colorScheme.primary, // Fondo azul de la maqueta
-        modifier = Modifier.fillMaxWidth()
+        // 7. Aplicamos main_blue al fondo del encabezado
+        color = main_blue,
+        // 8. Añadimos esquinas redondeadas solo arriba para un mejor estilo visual
+        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp) // Pequeño espacio para separarlo del componente anterior
     ) {
         Text(
             text = title,
-            color = MaterialTheme.colorScheme.onPrimary,
-            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
         )
     }
 }
 
 // --- Componente Reutilizable (Dropdown para Propósito Animal) ---
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownMenuField(
     label: String,
