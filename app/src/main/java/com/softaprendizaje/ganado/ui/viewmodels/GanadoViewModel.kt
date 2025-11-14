@@ -7,36 +7,28 @@ import com.google.firebase.auth.FirebaseAuth
 import com.softaprendizaje.ganado.ui.data.Animal
 import com.softaprendizaje.ganado.ui.data.Finca
 
+// ⚠️ Nota: Asume que las clases Animal y Finca están correctamente definidas
+// en com.softaprendizaje.ganado.ui.data
+
 class GanadoViewModel : ViewModel() {
 
-    // --- MÉTRICAS ---
+    // --- ESTADOS DE MÉTRICAS ---
     var totalCarne by mutableStateOf(0.0)
     var totalLeche by mutableStateOf(0.0)
     var animalesProducidos by mutableStateOf(0)
     var gananciaPeso by mutableStateOf(0.0)
 
-    // --- USER ---
-    private val uid = FirebaseAuth.getInstance().currentUser?.uid
-        ?: throw Exception("❌ No hay usuario autenticado")
+    // --- ESTADOS DE USUARIO/FINCA ---
+    var nombreUsuario by mutableStateOf("...") // Valor inicial mientras carga
+        private set
 
-    // --- FIREBASE (Realtime Database) ---
-    private val database = FirebaseDatabase.getInstance()
-        .getReference("usuarios")
-        .child(uid)
-        .child("animales")
-
-    private val fincaRef = FirebaseDatabase.getInstance()
-        .getReference("usuarios")
-        .child(uid)
-        .child("finca")
-
-    // --- ESTADOS ---
     private var _listaAnimales by mutableStateOf(listOf<Animal>())
     val animales: List<Animal> get() = _listaAnimales
 
     var finca by mutableStateOf<Finca?>(null)
         private set
 
+    // 🔑 ESTADO CLAVE: Determina si mostrar métricas o botón de crear finca
     var fincaCreada by mutableStateOf(false)
         private set
 
@@ -44,10 +36,35 @@ class GanadoViewModel : ViewModel() {
     val totalMachos by derivedStateOf { _listaAnimales.count { it.esMacho } }
     val totalHembras by derivedStateOf { _listaAnimales.count { !it.esMacho } }
 
+    // --- USER & FIREBASE REFERENCES ---
+    private val uid = FirebaseAuth.getInstance().currentUser?.uid
+        ?: throw Exception("❌ No hay usuario autenticado")
+
+    private val database = FirebaseDatabase.getInstance()
+
+    // 1. REFERENCIA A LA UBICACIÓN DE LOS ANIMALES
+    private val animalesRef = database
+        .getReference("usuarios")
+        .child(uid)
+        .child("animales")
+
+    // 2. REFERENCIA A LA UBICACIÓN DE LA FINCA (RUTA CORRECTA)
+    private val fincaRef = database
+        .getReference("usuarios")
+        .child(uid)
+        .child("finca")
+
+    // 3. REFERENCIA A LOS DATOS DEL USUARIO (PARA EL NOMBRE)
+    private val usuarioRef = database
+        .getReference("Usuarios") // Usamos "Usuarios" si así lo creaste en RegisterScreen
+        .child(uid)
+
+
     // --- INIT ---
     init {
-        cargarFinca()
+        // Ejecutamos las escuchas al inicio del ViewModel
         escucharAnimales()
+        escucharFinca()
     }
 
     // ======================
@@ -61,48 +78,48 @@ class GanadoViewModel : ViewModel() {
         )
 
         fincaRef.setValue(nuevaFinca)
-            .addOnSuccessListener {
-                finca = nuevaFinca
-                fincaCreada = true
-            }
             .addOnFailureListener {
                 println("❌ Error al crear finca: ${it.message}")
             }
     }
 
-    fun cargarFinca() {
-        fincaRef.get()
-            .addOnSuccessListener { snapshot ->
+    /** ESCUCHA CONSTANTE para la Finca (SOLUCIÓN AL BUG) */
+    private fun escucharFinca() {
+        fincaRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
                 val fincaEncontrada = snapshot.getValue(Finca::class.java)
                 finca = fincaEncontrada
+                // 🔑 CLAVE: Si la snapshot existe (no es nula), la finca está creada.
                 fincaCreada = fincaEncontrada != null
             }
-            .addOnFailureListener {
-                println("❌ Error al cargar finca: ${it.message}")
+
+            override fun onCancelled(error: DatabaseError) {
+                println("❌ Error al escuchar finca: ${error.message}")
             }
+        })
     }
 
     // ======================
     // 🐄 ANIMALES
     // ======================
     fun agregarAnimal(animal: Animal) {
-        database.child(animal.id).setValue(animal)
+        animalesRef.child(animal.id).setValue(animal)
             .addOnFailureListener { e ->
                 println("❌ Error al guardar animal: ${e.message}")
             }
     }
 
     fun eliminarAnimal(animal: Animal) {
-        database.child(animal.id).removeValue()
+        animalesRef.child(animal.id).removeValue()
             .addOnFailureListener { e ->
                 println("❌ Error al eliminar animal: ${e.message}")
             }
     }
 
-    // --- 🔥 ESCUCHA EN TIEMPO REAL ---
-    fun escucharAnimales() {
+    // --- 🔥 ESCUCHA EN TIEMPO REAL de Animales ---
+    private fun escucharAnimales() {
 
-        database.addValueEventListener(object : ValueEventListener {
+        animalesRef.addValueEventListener(object : ValueEventListener {
 
             override fun onDataChange(snapshot: DataSnapshot) {
 
@@ -122,22 +139,23 @@ class GanadoViewModel : ViewModel() {
         })
     }
 
+    // --- FUNCIÓN PARA CARGAR DATOS DEL USUARIO (SOLO NOMBRE) ---
     fun cargarDatosUsuario(userId: String) {
 
-        val animalesRef = FirebaseDatabase.getInstance()
-            .getReference("usuarios")
-            .child(userId)
-            .child("animales")
-
-        animalesRef.get()
-            .addOnSuccessListener { snapshot ->
-
-                val lista = snapshot.children.mapNotNull { it.getValue(Animal::class.java) }
-                _listaAnimales = lista   // ← 🔥 esto actualiza TODO automáticamente
+        usuarioRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val nombreDesdeFirebase = snapshot.child("nombre").getValue(String::class.java)
+                if (nombreDesdeFirebase != null) {
+                    nombreUsuario = nombreDesdeFirebase
+                } else {
+                    val emailUsuario = FirebaseAuth.getInstance().currentUser?.email
+                    nombreUsuario = emailUsuario ?: "Usuario"
+                }
             }
-            .addOnFailureListener {
-                println("❌ Error cargando datos: ${it.message}")
+            override fun onCancelled(error: DatabaseError) {
+                println("❌ Error al cargar nombre de usuario: ${error.message}")
+                nombreUsuario = "Usuario"
             }
+        })
     }
-
 }

@@ -44,25 +44,32 @@ fun AppNavigation() {
             )
         };
 
-        // CORREGIDO
         composable("register") {
             RegisterScreen(
                 onRegisterSuccess = {
                     navController.navigate("inicio") {
                         popUpTo("welcome") { inclusive = true }
                     }
+                },
+                onLoginClick = {
+                    navController.navigate("login")
                 }
             )
         };
 
+        // CORREGIDO: Se ha añadido la llamada a LoginScreen con sus parámetros
         composable("login") {
             LoginScreen(
                 onLoginClick = {
+                    // Acción al iniciar sesión: ir a "inicio" y limpiar la pila de navegación
                     navController.navigate("inicio") {
                         popUpTo("welcome") { inclusive = true }
                     }
                 },
-                onRegisterClick = { navController.navigate("register") }
+                onRegisterClick = {
+                    // Acción para ir al registro desde el login
+                    navController.navigate("register")
+                }
             )
         };
 
@@ -75,7 +82,6 @@ fun AppNavigation() {
             AnimalListScreen(navController = navController)
         };
 
-        // CORREGIDO
         composable("crearAnimal") {
             CreateAnimalScreen(
                 onAnimalCreated = {
@@ -89,11 +95,25 @@ fun AppNavigation() {
         composable("alertas") { /* Placeholder */ }
 
         composable("crearFinca") {
-            CrearFincaScreen(onFincaCreada = { navController.navigate("inicio") })
+            CrearFincaScreen(
+                // 1. La acción que ya tenías: navegar a "inicio" cuando la finca se cree.
+                onFincaCreada = {
+                    navController.popBackStack() // Es mejor usar popBackStack() para solo volver atrás
+                },
+                // 2. ✅ LA PARTE QUE FALTABA: La acción para el botón de "atrás".
+                onBack = {
+                    navController.popBackStack() // Simplemente vuelve a la pantalla anterior.
+                }
+            )
         }
 
-        composable("miFinca") { MiFincaScreen() }
-        composable("miCuenta") { MiCuentaScreen() }
-
+        composable("miFinca") {
+            MiFincaScreen( onNavigateBack = { navController.popBackStack()
+            })
+        }
+        composable("miCuenta") {
+            MiCuentaScreen( onNavigateBack = { navController.popBackStack()
+            })
+        }
     }
 }
