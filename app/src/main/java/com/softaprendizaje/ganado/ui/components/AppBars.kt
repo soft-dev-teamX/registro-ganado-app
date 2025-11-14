@@ -6,12 +6,18 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pets // Placeholder para "Animales"
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Grass // Placeholder para "Producción"
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning // Placeholder para "Alertas"
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import com.softaprendizaje.ganado.R // ⚠️ IMPORTANTE: Asumiendo que tus iconos están en res/drawable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 
 // Data class para manejar los ítems de navegación
 data class BottomNavItem(
@@ -24,24 +30,22 @@ data class BottomNavItem(
 // --- BARRA SUPERIOR (TOP BAR) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FincaTopBar(
-    onMenuClick: () -> Unit,
-    onSearchClick: () -> Unit
-) {
+fun FincaTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit) {
     TopAppBar(
-        title = { Text("Finca") },
+        title = { Text("Inicio") },
         navigationIcon = {
-            IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menú")
+            IconButton(onClick = { onMenuClick() }) {
+                Icon(Icons.Default.Menu, contentDescription = "Menu")
             }
         },
         actions = {
-            IconButton(onClick = onSearchClick) {
+            IconButton(onClick = { onSearchClick() }) {
                 Icon(Icons.Default.Search, contentDescription = "Buscar")
             }
         }
     )
 }
+
 
 // --- BARRA INFERIOR (BOTTOM BAR) ---
 @Composable

@@ -1,65 +1,99 @@
 package com.softaprendizaje.ganado
 
+// Importaciones necesarias para las nuevas rutas
+import com.softaprendizaje.ganado.ui.screens.AnimalListScreen
+import com.softaprendizaje.ganado.ui.screens.CreateAnimalScreen
+import com.softaprendizaje.ganado.ui.screens.HomeScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.softaprendizaje.ganado.ui.theme.RegistroGanadoTheme
-import com.softaprendizaje.ganado.ui.screens.WelcomeScreen
-import com.softaprendizaje.ganado.ui.screens.RegisterScreen
-import com.softaprendizaje.ganado.ui.screens.LoginScreen
-import com.softaprendizaje.ganado.ui.screens.HomeScreen
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.softaprendizaje.ganado.ui.screens.CrearFincaScreen
+import com.softaprendizaje.ganado.ui.screens.LoginScreen
+import com.softaprendizaje.ganado.ui.screens.MiCuentaScreen
+import com.softaprendizaje.ganado.ui.screens.MiFincaScreen
+import com.softaprendizaje.ganado.ui.screens.RegisterScreen
+import com.softaprendizaje.ganado.ui.screens.WelcomeScreen
+import com.softaprendizaje.ganado.ui.theme.RegistroGanadoTheme
 
+// La Activity principal se mantiene sencilla
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            AppNavigation()
+            RegistroGanadoTheme {
+                AppNavigation() // El único trabajo de la Activity es lanzar la navegación
+            }
         }
-
     }
 }
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
     NavHost(navController, startDestination = "welcome") {
+        // --- Rutas de autenticación ---
         composable("welcome") {
             WelcomeScreen(
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register") }
             )
+        };
+
+        // CORREGIDO
+        composable("register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate("inicio") {
+                        popUpTo("welcome") { inclusive = true }
+                    }
+                }
+            )
+        };
+
+        composable("login") {
+            LoginScreen(
+                onLoginClick = {
+                    navController.navigate("inicio") {
+                        popUpTo("welcome") { inclusive = true }
+                    }
+                },
+                onRegisterClick = { navController.navigate("register") }
+            )
+        };
+
+        // --- Rutas de la App Principal ---
+        composable("inicio") {
+            HomeScreen(navController = navController)
+        };
+
+        composable("animales") {
+            AnimalListScreen(navController = navController)
+        };
+
+        // CORREGIDO
+        composable("crearAnimal") {
+            CreateAnimalScreen(
+                onAnimalCreated = {
+                    navController.popBackStack()
+                }
+            )
+        };
+
+        // --- Rutas restantes ---
+        composable("produccion") { /* Placeholder */ };
+        composable("alertas") { /* Placeholder */ }
+
+        composable("crearFinca") {
+            CrearFincaScreen(onFincaCreada = { navController.navigate("inicio") })
         }
-        composable("register") { RegisterScreen(navController) }
-        composable("login") { LoginScreen(navController) }
-        composable("home") { HomeScreen(navController) }
-    }
-}
 
+        composable("miFinca") { MiFincaScreen() }
+        composable("miCuenta") { MiCuentaScreen() }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    RegistroGanadoTheme {
-        Greeting("Android")
     }
 }
