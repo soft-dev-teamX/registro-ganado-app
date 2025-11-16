@@ -7,15 +7,20 @@ import com.google.firebase.auth.FirebaseAuth
 import com.softaprendizaje.ganado.ui.data.Animal
 import com.softaprendizaje.ganado.ui.data.Finca
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 // ⚠️ Nota: Asume que las clases Animal y Finca están correctamente definidas
 // en com.softaprendizaje.ganado.ui.data
 
 class GanadoViewModel : ViewModel() {
-
     // --- ESTADOS DE MÉTRICAS ---
     var totalCarne by mutableStateOf(0.0)
     var totalLeche by mutableStateOf(0.0)
-    var animalesProducidos by mutableStateOf(0)
+    var animalesProducidos by mutableStateOf(0) // Hembras que han producido
+    var totalCriasProducidas by mutableStateOf(0) // Número total de crías nacidas
+
     var gananciaPeso by mutableStateOf(0.0)
 
     // --- ESTADOS DE USUARIO/FINCA ---
@@ -35,6 +40,7 @@ class GanadoViewModel : ViewModel() {
     // --- CÁLCULO AUTOMÁTICO ---
     val totalMachos by derivedStateOf { _listaAnimales.count { it.esMacho } }
     val totalHembras by derivedStateOf { _listaAnimales.count { !it.esMacho } }
+
 
     // --- USER & FIREBASE REFERENCES ---
     private val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -83,6 +89,44 @@ class GanadoViewModel : ViewModel() {
             }
     }
 
+    /**
+     * Función para actualizar los datos de la Finca.
+     * Recibe los valores de área como String y los convierte a Double antes de guardar.
+     */
+    fun updateFincaData(
+        nombre: String,
+        proposito: String,
+        ubicacion: String,
+        areaString: String,
+        areaGanadoString: String
+    ) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        // Conversión segura de String a Double. Si falla, usa 0.0
+        val area = areaString.toDoubleOrNull() ?: 0.0
+        val areaGanado = areaGanadoString.toDoubleOrNull() ?: 0.0
+
+        // Creamos un nuevo objeto Finca con los datos actualizados
+        val updatedFinca = Finca(
+            nombre = nombre,
+            proposito = proposito,
+            ubicacion = ubicacion,
+            area = area, // Usamos la variable 'area' (Double)
+            areaGanado = areaGanado // Usamos la variable 'areaGanado' (Double)
+        )
+
+        // Guardamos el objeto completo en el nodo 'finca'
+        fincaRef.setValue(updatedFinca)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    println("Datos de la finca actualizados con éxito.")
+                } else {
+                    println("Error al actualizar datos de la finca: ${task.exception?.message}")
+                }
+            }
+    }
+
+
     /** ESCUCHA CONSTANTE para la Finca (SOLUCIÓN AL BUG) */
     private fun escucharFinca() {
         fincaRef.addValueEventListener(object : ValueEventListener {
@@ -109,6 +153,17 @@ class GanadoViewModel : ViewModel() {
             }
     }
 
+    fun updateAnimal(animal: Animal) {
+        animalesRef.child(animal.id).setValue(animal)
+            .addOnSuccessListener {
+                println("Animal actualizado correctamente")
+            }
+            .addOnFailureListener {
+                println("Error al actualizar animal: ${it.message}")
+            }
+    }
+
+
     fun eliminarAnimal(animal: Animal) {
         animalesRef.child(animal.id).removeValue()
             .addOnFailureListener { e ->
@@ -130,7 +185,13 @@ class GanadoViewModel : ViewModel() {
                 totalCarne = lista.sumOf { it.carne }
                 totalLeche = lista.sumOf { it.leche }
                 gananciaPeso = lista.sumOf { it.gananciaPeso }
+
+                // Hembras que han producido (booleano)
                 animalesProducidos = lista.count { it.producido }
+
+                // Total de crías nacidas
+                totalCriasProducidas = lista.sumOf { it.numeroCrias }
+
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -158,4 +219,6 @@ class GanadoViewModel : ViewModel() {
             }
         })
     }
+
+
 }

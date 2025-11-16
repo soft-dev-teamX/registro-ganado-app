@@ -6,4 +6,5 @@ data class Finca(
     val ubicacion: String = "",
     val area: Double = 0.0,
     val areaGanado: Double = 0.0
+
 )

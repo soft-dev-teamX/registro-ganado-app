@@ -234,13 +234,28 @@ fun HomeScreen(
 
                     // Grupo 3: Otros Animales
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Otros Animales", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        "Otros Animales",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                        // ✔ HEMBRAS que han producido (booleano)
                         MetricCard(
-                            title = "Animales Producidos",
+                            title = "Hembras Producidas",
                             value = viewModel.animalesProducidos.toString(),
+                            subtitle = "Han parido",
+                            icon = { Icon(Icons.Default.CheckCircle, "Hembras que produjeron") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // ✔ TOTAL DE CRÍAS producidas (suma númeroCrias)
+                        MetricCard(
+                            title = "Crías Producidas",
+                            value = viewModel.totalCriasProducidas.toString(),
                             subtitle = "Nacimientos",
-                            icon = { Icon(Icons.Default.Pets, "Animales producidos") },
+                            icon = { Icon(Icons.Default.Pets, "Total crías producidas") },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
