@@ -32,6 +32,7 @@ import com.softaprendizaje.ganado.ui.theme.main_blue
 @Composable
 fun MiFincaScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToEditFinca: () -> Unit,
     viewModel: GanadoViewModel = viewModel()) {
 
     // 🐄 Usando el objeto 'finca' real del ViewModel
@@ -49,7 +50,7 @@ fun MiFincaScreen(
                 actions = {
                     // Solo mostramos Editar si la finca existe
                     if (finca != null) {
-                        IconButton(onClick = { /* Lógica de Edición */ }) {
+                        IconButton(onClick = onNavigateToEditFinca) {
                             Icon(Icons.Filled.Edit, contentDescription = "Editar")
                         }
                     }

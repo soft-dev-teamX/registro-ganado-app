@@ -26,7 +26,8 @@ import com.softaprendizaje.ganado.ui.viewmodels.MiCuentaViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MiCuentaScreen(
-    onNavigateBack: () -> Unit // Asumimos que necesitas una función para volver
+    onNavigateBack: () -> Unit,
+    onNavigateToEditProfile: () -> Unit // Asumimos que necesitas una función para volver
 ) {
     val viewModel: MiCuentaViewModel = viewModel()
     val userData by viewModel.userData.collectAsState()
@@ -60,7 +61,7 @@ fun MiCuentaScreen(
             DataCard(
                 title = "Información Personal",
                 // TODO: Implementar lógica de navegación a edición
-                onEditClick = { /* navController.navigate("editarPerfil") */ }
+                onEditClick = onNavigateToEditProfile
             ) {
                 // Organizado en 2 columnas (Nombre/Apellido y Correo)
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -84,7 +85,7 @@ fun MiCuentaScreen(
             // --- 💳 CARD: GENERAL (Ubicación/Contacto) ---
             DataCard(
                 title = "Ubicación y Contacto",
-                onEditClick = { /* navController.navigate("editarContacto") */ }
+                onEditClick = onNavigateToEditProfile
             ) {
                 // Organizado en 2x2
                 Column(modifier = Modifier.fillMaxWidth()) {

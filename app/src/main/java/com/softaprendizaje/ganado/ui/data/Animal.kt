@@ -14,5 +14,8 @@ data class Animal(
     val carne: Double = 0.0,
     val leche: Double = 0.0,
     val gananciaPeso: Double = 0.0,
-    val producido: Boolean = false
+    val producido: Boolean = false,
+
+    val numeroCrias: Int = 0
+
 )

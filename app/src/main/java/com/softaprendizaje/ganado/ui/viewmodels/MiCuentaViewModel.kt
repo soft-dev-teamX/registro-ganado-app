@@ -63,4 +63,37 @@ class MiCuentaViewModel : ViewModel() {
             }
         })
     }
+
+    // Nuevo: Función para guardar los datos actualizados
+    fun updateUserData(
+        nombre: String,
+        apellido: String,
+        pais: String,
+        region: String,
+        ciudad: String,
+        telefono: String
+        // El email y la fotoUrl generalmente se manejan aparte o no se editan aquí
+    ) {
+        val userId = auth.currentUser?.uid ?: return
+
+        val updates = hashMapOf<String, Any>(
+            "nombre" to nombre,
+            "apellido" to apellido,
+            "pais" to pais,
+            "region" to region,
+            "ciudad" to ciudad,
+            "telefono" to telefono
+        )
+
+        // Usamos updateChildren para actualizar solo los campos especificados
+        dbRef.child(userId).updateChildren(updates)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    println("Datos de usuario actualizados con éxito.")
+                    // El ValueEventListener en loadUserData() se encargará de actualizar el StateFlow
+                } else {
+                    println("Error al actualizar datos: ${task.exception?.message}")
+                }
+            }
+    }
 }

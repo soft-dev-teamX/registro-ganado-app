@@ -117,7 +117,12 @@ fun AnimalListScreen(navController: NavController) {
                 ) {
                     items(filteredAnimals) { animal ->
                         // Componente de Tarjeta
-                        CompactAnimalCard(animal)
+                        CompactAnimalCard(
+                            animal = animal,
+                            onAnimalClick = {
+                                navController.navigate("editarAnimal/${animal.id}")
+                            }
+                        )
                     }
                 }
             }
@@ -176,9 +181,13 @@ fun GenderTab(label: String, count: Int, isSelected: Boolean, onClick: () -> Uni
 }
 
 @Composable
-fun CompactAnimalCard(animal: Animal) {
+fun CompactAnimalCard(
+    animal: Animal,
+    onAnimalClick: () -> Unit
+)
+{
     Card(
-        onClick = { /* Lógica de Navegación al Detalle del Animal */ },
+        onClick = onAnimalClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
