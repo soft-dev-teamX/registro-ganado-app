@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,35 +27,50 @@ import com.softaprendizaje.ganado.R
 // ⬇️ IMPORTAMOS LA VARIABLE main_blue (asumimos que existe aquí)
 import com.softaprendizaje.ganado.ui.theme.main_blue
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalListScreen(navController: NavController) {
 
     val viewModel: GanadoViewModel = viewModel()
 
-    // Estado para manejar la pestaña seleccionada: true=Machos, false=Hembras
+    // Estado: Machos o Hembras
     var showMales by remember { mutableStateOf(true) }
 
-    // Lista de animales filtrada por el estado de 'showMales'
-    val filteredAnimals = viewModel.animales.filter { it.esMacho == showMales }
+    // Estado: búsqueda
+    var searchQuery by remember { mutableStateOf("") }
 
-    // Conteo para las pestañas
+    // Estado: filtro de producidos
+    var soloProducidos by remember { mutableStateOf(false) }
+
+    // Conteos
     val maleCount = viewModel.animales.count { it.esMacho }
     val femaleCount = viewModel.animales.size - maleCount
 
+    // ------ FILTRADO COMBINADO ------
+    val filteredAnimals = viewModel.animales
+        // 1. Machos / Hembras
+        .filter { it.esMacho == showMales }
+        // 2. Búsqueda
+        .filter {
+            searchQuery.isBlank() ||
+                    it.numero.contains(searchQuery, ignoreCase = true) ||
+                    it.raza.contains(searchQuery, ignoreCase = true) ||
+                    it.proposito.contains(searchQuery, ignoreCase = true)
+        }
+        // 3. Filtro "Producidos"
+        .filter {
+            if (soloProducidos) it.producido else true
+        }
 
     Scaffold(
         topBar = {
-            // 1. TopBar usando 'main_blue'
             CenterAlignedTopAppBar(
-                title = { Text("Animales", color = Color.White) }, // Usamos Color.White directamente para el contraste
+                title = { Text("Animales", color = Color.White) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = main_blue // ⬅️ Usando tu color personalizado
+                    containerColor = main_blue
                 )
             )
         },
-        // 2. Eliminamos floatingActionButton (Botón con el '+')
 
         bottomBar = {
             FincaBottomBar(
@@ -68,15 +85,14 @@ fun AnimalListScreen(navController: NavController) {
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
 
-            // 3. Eliminamos la Barra de Búsqueda (OutlinedTextField)
-
-            // 4. Pestañas de Machos / Hembras
+            // ----------------- TABS MACHOS / HEMBRAS -----------------
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +115,35 @@ fun AnimalListScreen(navController: NavController) {
                 )
             }
 
-            // 5. Lista de Animales Filtrada
+            // ----------------- BARRA DE BÚSQUEDA -----------------
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                label = { Text("Buscar por número, raza o propósito") },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null)
+                },
+                singleLine = true
+            )
+
+            // ----------------- FILTROS (CHIPS) -----------------
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = soloProducidos,
+                    onClick = { soloProducidos = !soloProducidos },
+                    label = { Text("Producidos") }
+                )
+            }
+
+            // ----------------- LISTA -----------------
             if (filteredAnimals.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -107,7 +151,7 @@ fun AnimalListScreen(navController: NavController) {
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No hay ${if (showMales) "machos" else "hembras"} registrados aún.")
+                    Text("No hay animales que coincidan con la búsqueda o filtros.")
                 }
             } else {
                 LazyColumn(
@@ -116,7 +160,6 @@ fun AnimalListScreen(navController: NavController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(filteredAnimals) { animal ->
-                        // Componente de Tarjeta
                         CompactAnimalCard(
                             animal = animal,
                             onAnimalClick = {
