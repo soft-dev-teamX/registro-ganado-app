@@ -1,14 +1,25 @@
 package com.softaprendizaje.ganado.viewmodels
 
-import android.content.Context
-import android.os.Environment
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.softaprendizaje.ganado.ui.data.Animal
-import java.io.File
-import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ReportesViewModel : ViewModel() {
 
+    // Último reporte generado (texto bonito)
+    var ultimoReporte = mutableStateOf<String?>(null)
+        private set
+
+    // Lista que verá el usuario en la pantalla
+    var historialReportes = mutableStateOf<List<String>>(emptyList())
+        private set
+
+
+    // ============================================
+    //  🔵 GENERAR CSV + ACTUALIZAR FECHA
+    // ============================================
     fun generarCSV(animales: List<Animal>): String {
         if (animales.isEmpty()) return ""
 
@@ -33,10 +44,37 @@ class ReportesViewModel : ViewModel() {
             ).joinToString(",")
         }
 
-        // UTF-8 + BOM para Excel
-        val bom = "\uFEFF"  // EF BB BF
+        val bom = "\uFEFF"
+
+        registrarReporte()
 
         return bom + header + body
     }
 
+
+    // ============================================
+    //  🔵 Guardar fecha del último reporte
+    // ============================================
+    private fun registrarReporte() {
+        val timestamp = obtenerFechaActual()
+        ultimoReporte.value = timestamp
+    }
+
+
+    // ============================================
+    //  🔵 Registrar archivo descargado (historial)
+    // ============================================
+    fun registrarArchivoDescargado(nombre: String) {
+        historialReportes.value =
+            historialReportes.value + "Archivo guardado: $nombre"
+    }
+
+
+    // ============================================
+    //  🔵 Fecha bonita
+    // ============================================
+    private fun obtenerFechaActual(): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        return sdf.format(Date())
+    }
 }
