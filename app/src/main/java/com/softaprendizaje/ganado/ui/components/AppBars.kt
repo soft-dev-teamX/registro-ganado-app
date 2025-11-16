@@ -57,8 +57,8 @@ fun FincaBottomBar(
     val navItems = listOf(
         BottomNavItem("Inicio", Icons.Default.Home, "inicio"),
         BottomNavItem("Animales", Icons.Default.Pets, "animales"),
-        BottomNavItem("Producción", Icons.Default.Grass, "produccion"),
-        BottomNavItem("Alertas", Icons.Default.Warning, "alertas")
+        BottomNavItem("Reportes", Icons.Default.Grass, "reportes"),
+                BottomNavItem("Alertas", Icons.Default.Warning, "alertas")
     )
 
     NavigationBar {
